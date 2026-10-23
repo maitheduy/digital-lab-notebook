@@ -222,7 +222,7 @@
 <div class="app">
   <aside class="sidebar">
     <div class="logo">
-      <div class="icon"></div>
+      <div class="icon">🔬</div>
       <span>Digital<b>Lab</b>Notebook</span>
     </div>
     <div>
@@ -241,7 +241,7 @@
     <div id="userProfile" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
       <div id="syncStatus" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;margin-bottom:10px;">
         <span style="width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block;"></span>
-        <span id="syncStatusText">Đang kết nối...</span>
+        <span id="syncStatusText">Chưa đăng nhập</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <img id="userAvatar" src="" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;"/>
@@ -261,7 +261,7 @@
   <main class="main">
     <div class="topbar">
       <div class="search">
-        <input type="text" id="searchInput" placeholder="Tìm theo tiêu đề, nội dung, thẻ..." oninput="window.render()"/>
+        <input type="text" id="searchInput" placeholder="Tìm theo tiêu đề, nội dung, thẻ..." oninput="window.handleSearchInput()"/>
       </div>
     </div>
     <div class="tag-filter" id="tagFilter"></div>
@@ -296,7 +296,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCxoYI-uaALS2hycvMh5Ma9Bnl0HZ-512s",
@@ -321,7 +321,7 @@
     console.error("❌ Lỗi khởi tạo Firebase:", e);
   }
 
-  const STORAGE_KEY = 'digitalLabNotebook_v3';
+  const STORAGE_KEY = 'digitalLabNotebook_v4';
   const SIDEBAR_KEY = 'sidebarWidth_v1';
   let state = { 
     folders: [], 
@@ -331,8 +331,13 @@
     selectedNoteId: null, 
     user: null 
   };
-  let isSyncingFromCloud = false; // Flag tránh vòng lặp
+  
+  // ===== CƠ CHẾ CHỐNG LỖI MẤT FOCUS =====
+  let isSyncingFromCloud = false;
   let unsubscribeUserDoc = null;
+  let saveDebounceTimer = null; // Debounce timer cho save
+  let isUserTyping = false; // Flag: user đang gõ
+  let lastCloudVersion = null; // Version của dữ liệu cloud để tránh vòng lặp
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -372,10 +377,29 @@
   function updateSyncStatus(status, text) {
     const dot = document.querySelector('#syncStatus span:first-child');
     const textEl = document.getElementById('syncStatusText');
-    const colors = { syncing: 'var(--muted)', synced: 'var(--success)', error: 'var(--danger)' };
-    dot.style.background = colors[status] || colors.syncing;
-    textEl.textContent = text;
+    const colors = { syncing: 'var(--muted)', synced: 'var(--success)', error: 'var(--danger)', typing: '#ffb347' };
+    if (dot) dot.style.background = colors[status] || colors.syncing;
+    if (textEl) textEl.textContent = text;
   }
+
+  // ===== TRACK FOCUS STATE =====
+  // Khi user đang focus vào input/textarea trong editor, không render lại editor
+  document.addEventListener('focusin', (e) => {
+    if (e.target.closest('.editor-card') || e.target.id === 'searchInput') {
+      isUserTyping = true;
+    }
+  });
+  document.addEventListener('focusout', (e) => {
+    // Delay để tránh race condition với click events
+    setTimeout(() => {
+      const active = document.activeElement;
+      if (!active || !active.closest('.editor-card')) {
+        if (active?.id !== 'searchInput') {
+          isUserTyping = false;
+        }
+      }
+    }, 100);
+  });
 
   window.loginWithGoogle = async () => {
     if (!firebaseInitialized) { toast('Firebase chưa khởi tạo.', 'error'); return; }
@@ -404,7 +428,7 @@
     }
   };
 
-  // ===== FIRESTORE SYNC =====
+  // ===== FIRESTORE SYNC VỚI DEBOUNCE =====
   function saveToCloud() {
     if (!state.user || !db) return;
     updateSyncStatus('syncing', 'Đang lưu lên đám mây...');
@@ -412,7 +436,8 @@
     setDoc(userRef, { 
       folders: state.folders, 
       notes: state.notes,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      version: Date.now()
     }, { merge: true })
       .then(() => {
         updateSyncStatus('synced', 'Đã đồng bộ đám mây');
@@ -425,6 +450,14 @@
       });
   }
 
+  // DEBOUNCE: Chờ 1.5 giây sau khi user ngừng gõ mới save lên cloud
+  function debouncedSaveToCloud() {
+    if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(() => {
+      saveToCloud();
+    }, 1500); // 1.5 giây
+  }
+
   function setupCloudSync(user) {
     if (unsubscribeUserDoc) unsubscribeUserDoc();
     updateSyncStatus('syncing', 'Đang kết nối...');
@@ -435,10 +468,42 @@
       
       if (docSnap.exists()) {
         const data = docSnap.data();
+        const cloudVersion = data.version || 0;
+        
+        // Tránh vòng lặp: nếu version cloud = version local, bỏ qua
+        if (cloudVersion === lastCloudVersion) {
+          isSyncingFromCloud = false;
+          return;
+        }
+        lastCloudVersion = cloudVersion;
+        
+        // ===== SMART MERGE =====
+        // Nếu user đang gõ (focus trong editor), KHÔNG render lại editor
+        // Chỉ cập nhật dữ liệu ngầm và render list/tags
+        const previousSelectedId = state.selectedNoteId;
+        const previousActiveFolder = state.activeFolder;
+        const previousActiveTag = state.activeTag;
+        
         state.folders = data.folders || [];
         state.notes = data.notes || [];
+        
+        // Khôi phục state UI
+        state.selectedNoteId = previousSelectedId;
+        state.activeFolder = previousActiveFolder;
+        state.activeTag = previousActiveTag;
+        
         console.log("📥 Đã tải từ Firestore:", state.notes.length, "ghi chép");
         updateSyncStatus('synced', 'Đã đồng bộ đám mây');
+        
+        // Nếu user đang gõ → chỉ render list & tags, KHÔNG render editor
+        if (isUserTyping) {
+          console.log("⌨️ User đang gõ - chỉ render list/tags, giữ nguyên editor");
+          renderFolders();
+          renderListAndTags();
+        } else {
+          // User không gõ → render toàn bộ
+          window.render();
+        }
       } else {
         // User mới - tạo dữ liệu mẫu
         console.log("🆕 User mới, tạo dữ liệu mẫu");
@@ -453,13 +518,10 @@
         ];
         state.notes = [];
         updateSyncStatus('syncing', 'Đang tạo dữ liệu mẫu...');
-        // Lưu lên cloud
         saveToCloud();
+        window.render();
       }
       
-      window.render();
-      
-      // Reset flag sau 100ms để tránh conflict với user action
       setTimeout(() => { isSyncingFromCloud = false; }, 100);
     }, (error) => {
       console.error("❌ Lỗi lắng nghe Firestore:", error);
@@ -482,7 +544,7 @@
       if (unsubscribeUserDoc) { unsubscribeUserDoc(); unsubscribeUserDoc = null; }
       document.getElementById('loginOverlay').style.display = 'flex';
       document.getElementById('userProfile').style.display = 'none';
-      // Load từ localStorage khi chưa đăng nhập (chế độ offline)
+      updateSyncStatus('syncing', 'Chưa đăng nhập');
       loadLocalOnly();
       window.render();
     }
@@ -505,9 +567,10 @@
 
   function saveData() {
     saveLocal();
-    // Chỉ lưu lên cloud nếu KHÔNG phải đang sync từ cloud về (tránh vòng lặp)
+    // Chỉ lưu lên cloud nếu KHÔNG phải đang sync từ cloud về
     if (!isSyncingFromCloud && state.user) {
-      saveToCloud();
+      debouncedSaveToCloud(); // DEBOUNCE: chờ 1.5s
+      updateSyncStatus('typing', 'Đang gõ... (tự động lưu)');
     }
   }
 
@@ -577,7 +640,7 @@
     state.folders.filter(f => f.parentId === null).forEach(f => {
       const opt = document.createElement('option');
       opt.value = f.id;
-      opt.textContent = ' ' + f.name;
+      opt.textContent = '📂 ' + f.name;
       parentSelect.appendChild(opt);
     });
     window.openModal('folderModal');
@@ -632,6 +695,12 @@
     window.render(); 
   };
 
+  window.handleSearchInput = () => {
+    // Chỉ render list & tags, KHÔNG render editor (giữ focus search)
+    renderFolders();
+    renderListAndTags();
+  };
+
   window.addAttachment = () => {
     const input = document.getElementById('attachmentUrl');
     const url = input.value.trim();
@@ -642,7 +711,9 @@
     note.updatedAt = new Date().toISOString();
     input.value = '';
     saveData();
-    window.render();
+    // Không render editor, chỉ render list
+    renderFolders();
+    renderListAndTags();
     toast('Đã thêm đính kèm');
   };
 
@@ -652,20 +723,35 @@
     note.attachments.splice(index, 1);
     note.updatedAt = new Date().toISOString();
     saveData();
-    window.render();
+    renderFolders();
+    renderListAndTags();
   };
 
+  // ===== UPDATE NOTE VỚI DEBOUNCE =====
   window.updateNote = () => {
     const note = state.notes.find(n => n.id === state.selectedNoteId);
     if (!note) return;
+    
+    // Cập nhật state ngay (không chờ debounce)
     note.title = document.getElementById('noteTitle').value;
     note.content = document.getElementById('noteContent').value;
     note.folderId = document.getElementById('noteFolder').value;
     const tagsInput = document.getElementById('noteTags').value;
     note.tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
     note.updatedAt = new Date().toISOString();
-    saveData();
-    window.renderListAndTags();
+    
+    // Lưu local ngay
+    saveLocal();
+    
+    // Debounce save lên cloud (chờ 1.5s sau khi ngừng gõ)
+    if (state.user && !isSyncingFromCloud) {
+      debouncedSaveToCloud();
+      updateSyncStatus('typing', 'Đang gõ... (tự động lưu sau 1.5s)');
+    }
+    
+    // Chỉ render list & tags, KHÔNG render editor (giữ focus)
+    renderFolders();
+    renderListAndTags();
   };
 
   window.render = () => {
@@ -697,14 +783,14 @@
         const directNotes = countDirectNotes(child.id);
         const isChildActive = state.activeFolder === child.id;
         html += `<div class="folder-item folder-child ${isChildActive ? 'active' : ''}" onclick="window.selectFolder('${child.id}')">
-          <span class="folder-icon">📂</span><span>${escapeHtml(child.name)}</span><span class="count">${directNotes}</span>
+          <span class="folder-icon"></span><span>${escapeHtml(child.name)}</span><span class="count">${directNotes}</span>
           <span class="del" onclick="event.stopPropagation();window.deleteFolder('${child.id}')" title="Xóa">✕</span></div>`;
       });
     });
     list.innerHTML = html;
   }
 
-  window.renderListAndTags = () => {
+  function renderListAndTags() {
     const allTags = new Set();
     state.notes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
     const tagContainer = document.getElementById('tagFilter');
@@ -760,9 +846,9 @@
         <span class="del" onclick="event.stopPropagation();window.deleteNote('${n.id}')" title="Xóa">✕</span>
       </div>`;
     }).join('');
-  };
+  }
 
-  window.renderEditor = () => {
+  function renderEditor() {
     const container = document.getElementById('editorContainer');
     const note = state.notes.find(n => n.id === state.selectedNoteId);
     if (!note) {
@@ -821,7 +907,7 @@
         </div>
       </div>
     `;
-  };
+  }
 
   window.openModal = (id) => { document.getElementById(id).classList.add('show'); }
   window.closeModal = (id) => { document.getElementById(id).classList.remove('show'); }
@@ -836,7 +922,7 @@
 
   window.exportData = () => {
     const data = { 
-      version: 3, 
+      version: 4, 
       exportedAt: new Date().toISOString(), 
       folders: state.folders,
       notes: state.notes,
@@ -910,7 +996,7 @@
   });
 
   loadSidebarWidth();
-  console.log(" [App] Digital Lab Notebook v3 với Firestore đã sẵn sàng");
+  console.log(" [App] Digital Lab Notebook v4 với Firestore + Debounce đã sẵn sàng");
 </script>
 </body>
 </html>
