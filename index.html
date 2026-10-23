@@ -30,13 +30,9 @@
     position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;
   }
   .resize-handle{
-    background:var(--border);cursor:col-resize;
-    transition:background .2s;
-    position:relative;
+    background:var(--border);cursor:col-resize;transition:background .2s;position:relative;
   }
-  .resize-handle:hover, .resize-handle.active{
-    background:var(--accent);
-  }
+  .resize-handle:hover, .resize-handle.active{background:var(--accent);}
   .resize-handle::after{
     content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     width:2px;height:40px;background:rgba(255,255,255,.2);border-radius:2px;
@@ -57,7 +53,6 @@
     background:transparent;border:0;color:var(--accent);cursor:pointer;font-size:16px;font-weight:700;line-height:1;
   }
   .section-title button:hover{color:var(--accent-2)}
-  
   .folder-list{display:flex;flex-direction:column;gap:2px}
   .folder-item{
     display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;
@@ -73,14 +68,10 @@
   .folder-item .del{display:none;margin-left:4px;color:var(--danger);font-weight:700;font-size:11px}
   .folder-item:hover .del{display:inline}
   .folder-item:hover .count{display:none}
-  
-  /* Folder cấp 1 */
   .folder-parent{font-weight:600}
   .folder-parent .folder-icon{font-size:14px}
-  /* Folder cấp 2 (con) */
   .folder-child{padding-left:30px !important;font-size:12.5px}
   .folder-child .folder-icon{font-size:12px}
-
   .io-buttons{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
   .btn{
     padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:600;font-size:13px;
@@ -90,7 +81,6 @@
   .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,107,53,.3)}
   .btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border)}
   .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-  
   .main{padding:24px 32px;overflow-y:auto;min-width:0}
   .topbar{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
   .search{flex:1;min-width:220px;position:relative}
@@ -99,8 +89,7 @@
     color:var(--text);border-radius:10px;font-size:14px;outline:none;transition:border-color .15s;
   }
   .search input:focus{border-color:var(--accent)}
-  .search::before{content:"🔍";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.7}
-  
+  .search::before{content:"";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.7}
   .tag-filter{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
   .tag-chip{
     padding:6px 12px;background:var(--card);border:1px solid var(--border);
@@ -108,7 +97,6 @@
   }
   .tag-chip:hover{color:var(--text);border-color:var(--accent)}
   .tag-chip.active{background:var(--accent);color:#0a0e1a;border-color:var(--accent);font-weight:600}
-
   .note-list{display:flex;flex-direction:column;gap:8px}
   .note-item{
     padding:12px;border-radius:8px;cursor:pointer;
@@ -130,7 +118,6 @@
     cursor:pointer;font-size:10px;opacity:0;transition:opacity .2s;
   }
   .note-item:hover .del{opacity:1}
-
   .editor-card{
     background:var(--card);border:1px solid var(--border);border-radius:12px;
     padding:24px;display:flex;flex-direction:column;gap:16px;
@@ -143,7 +130,6 @@
   }
   .form-group input:focus, .form-group textarea:focus, .form-group select:focus{border-color:var(--accent)}
   .form-group textarea{min-height:250px;resize:vertical;line-height:1.6}
-  
   .attachments{display:flex;flex-direction:column;gap:8px}
   .attachment-item{
     display:flex;align-items:center;gap:10px;padding:8px 12px;
@@ -164,7 +150,6 @@
     border-radius:6px;color:var(--text);cursor:pointer;font-size:13px;
   }
   .add-attachment button:hover{border-color:var(--accent);color:var(--accent)}
-  
   .timestamp{
     font-size:11px;color:var(--muted);padding:8px 12px;
     background:rgba(0,212,255,.1);border-radius:6px;
@@ -172,7 +157,6 @@
   }
   .empty{text-align:center;padding:60px 20px;color:var(--muted)}
   .empty .big{font-size:48px;margin-bottom:12px;opacity:.3}
-  
   .login-overlay{
     position:fixed;inset:0;background:var(--bg);z-index:1000;
     display:flex;align-items:center;justify-content:center;
@@ -183,7 +167,6 @@
     box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:fadeIn 0.3s ease-out;
   }
   @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-  
   .toast{
     position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--success);
     color:var(--success);padding:12px 18px;border-radius:10px;font-weight:600;font-size:13px;z-index:200;
@@ -191,8 +174,6 @@
   }
   .toast.show{transform:translateY(0);opacity:1}
   .toast.error{border-color:var(--danger);color:var(--danger)}
-  
-  /* Modal */
   .modal-backdrop{
     position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
@@ -205,12 +186,10 @@
   .modal h2{margin-bottom:18px;color:var(--text);font-size:20px;display:flex;align-items:center;gap:10px}
   .modal h2::before{content:"";width:4px;height:22px;background:var(--accent);border-radius:2px}
   .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
-  
   ::-webkit-scrollbar{width:8px;height:8px}
   ::-webkit-scrollbar-track{background:var(--bg)}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
   ::-webkit-scrollbar-thumb:hover{background:var(--accent)}
-  
   @media (max-width:768px){
     .app{grid-template-columns:1fr}
     .resize-handle{display:none}
@@ -225,7 +204,7 @@
 <div id="loginOverlay" class="login-overlay">
   <div class="login-box">
     <div class="logo" style="justify-content:center;margin-bottom:24px;">
-      <div class="icon"></div>
+      <div class="icon">🔬</div>
       <span>Digital<b>Lab</b>Notebook</span>
     </div>
     <h2 style="margin-bottom:12px;">Sổ tay Nghiên cứu</h2>
@@ -243,7 +222,7 @@
 <div class="app">
   <aside class="sidebar">
     <div class="logo">
-      <div class="icon">🔬</div>
+      <div class="icon"></div>
       <span>Digital<b>Lab</b>Notebook</span>
     </div>
     <div>
@@ -256,13 +235,13 @@
     <div class="io-buttons">
       <button class="btn btn-primary" onclick="window.createNewNote()">＋ Ghi chép mới</button>
       <button class="btn btn-ghost" onclick="window.exportData()">⬇ Xuất JSON</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()"> Nhập JSON</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆ Nhập JSON</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="window.importData(event)"/>
     </div>
     <div id="userProfile" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
-      <div id="syncStatus" style="font-size:11px;color:var(--success);display:flex;align-items:center;gap:4px;margin-bottom:10px;">
-        <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;"></span>
-        Đã đồng bộ đám mây
+      <div id="syncStatus" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;margin-bottom:10px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block;"></span>
+        <span id="syncStatusText">Đang kết nối...</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <img id="userAvatar" src="" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;"/>
@@ -291,7 +270,6 @@
   </main>
 </div>
 
-<!-- MODAL FOLDER -->
 <div class="modal-backdrop" id="folderModal">
   <div class="modal">
     <h2>Thêm Thư mục</h2>
@@ -318,6 +296,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCxoYI-uaALS2hycvMh5Ma9Bnl0HZ-512s",
@@ -328,15 +307,16 @@
     appId: "1:1068554618449:web:7881c93ccb2d49dbf75a70"
   };
 
-  let auth, provider;
+  let auth, db, provider;
   let firebaseInitialized = false;
   
   try {
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
+    db = getFirestore(app);
     provider = new GoogleAuthProvider();
     firebaseInitialized = true;
-    console.log("✅ Firebase khởi tạo thành công!");
+    console.log("✅ Firebase + Firestore khởi tạo thành công!");
   } catch (e) {
     console.error("❌ Lỗi khởi tạo Firebase:", e);
   }
@@ -351,6 +331,8 @@
     selectedNoteId: null, 
     user: null 
   };
+  let isSyncingFromCloud = false; // Flag tránh vòng lặp
+  let unsubscribeUserDoc = null;
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -387,6 +369,14 @@
     }
   }
 
+  function updateSyncStatus(status, text) {
+    const dot = document.querySelector('#syncStatus span:first-child');
+    const textEl = document.getElementById('syncStatusText');
+    const colors = { syncing: 'var(--muted)', synced: 'var(--success)', error: 'var(--danger)' };
+    dot.style.background = colors[status] || colors.syncing;
+    textEl.textContent = text;
+  }
+
   window.loginWithGoogle = async () => {
     if (!firebaseInitialized) { toast('Firebase chưa khởi tạo.', 'error'); return; }
     setLoading(true);
@@ -407,12 +397,118 @@
 
   window.logout = () => {
     if(confirm("Bạn có chắc muốn đăng xuất?")) {
-      signOut(auth).then(() => { toast("Đã đăng xuất"); }).catch(err => toast("Lỗi: " + err.message, 'error'));
+      signOut(auth).then(() => { 
+        toast("Đã đăng xuất"); 
+        if (unsubscribeUserDoc) { unsubscribeUserDoc(); unsubscribeUserDoc = null; }
+      }).catch(err => toast("Lỗi: " + err.message, 'error'));
     }
   };
 
-  function saveData() {
+  // ===== FIRESTORE SYNC =====
+  function saveToCloud() {
+    if (!state.user || !db) return;
+    updateSyncStatus('syncing', 'Đang lưu lên đám mây...');
+    const userRef = doc(db, 'users', state.user.uid);
+    setDoc(userRef, { 
+      folders: state.folders, 
+      notes: state.notes,
+      lastUpdated: new Date().toISOString()
+    }, { merge: true })
+      .then(() => {
+        updateSyncStatus('synced', 'Đã đồng bộ đám mây');
+        console.log("✅ Đã lưu lên Firestore");
+      })
+      .catch(err => {
+        console.error("❌ Lỗi lưu Firestore:", err);
+        updateSyncStatus('error', 'Lỗi đồng bộ');
+        toast('Lỗi lưu đám mây: ' + err.message, 'error');
+      });
+  }
+
+  function setupCloudSync(user) {
+    if (unsubscribeUserDoc) unsubscribeUserDoc();
+    updateSyncStatus('syncing', 'Đang kết nối...');
+    
+    const userRef = doc(db, 'users', user.uid);
+    unsubscribeUserDoc = onSnapshot(userRef, (docSnap) => {
+      isSyncingFromCloud = true;
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        state.folders = data.folders || [];
+        state.notes = data.notes || [];
+        console.log("📥 Đã tải từ Firestore:", state.notes.length, "ghi chép");
+        updateSyncStatus('synced', 'Đã đồng bộ đám mây');
+      } else {
+        // User mới - tạo dữ liệu mẫu
+        console.log("🆕 User mới, tạo dữ liệu mẫu");
+        const maId = uid();
+        const ch1Id = uid();
+        const ch2Id = uid();
+        state.folders = [
+          { id: maId, name: 'MAE101 - Toán cao cấp', parentId: null },
+          { id: ch1Id, name: 'Chương 1 - Giới hạn', parentId: maId },
+          { id: ch2Id, name: 'Chương 2 - Đạo hàm', parentId: maId },
+          { id: uid(), name: 'Thí nghiệm', parentId: null }
+        ];
+        state.notes = [];
+        updateSyncStatus('syncing', 'Đang tạo dữ liệu mẫu...');
+        // Lưu lên cloud
+        saveToCloud();
+      }
+      
+      window.render();
+      
+      // Reset flag sau 100ms để tránh conflict với user action
+      setTimeout(() => { isSyncingFromCloud = false; }, 100);
+    }, (error) => {
+      console.error("❌ Lỗi lắng nghe Firestore:", error);
+      updateSyncStatus('error', 'Lỗi kết nối');
+      toast('Lỗi đồng bộ: ' + error.message, 'error');
+    });
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      state.user = user;
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('userProfile').style.display = 'block';
+      document.getElementById('userAvatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'U')}&background=ff6b35&color=fff`;
+      document.getElementById('userName').textContent = user.displayName || 'Người dùng';
+      document.getElementById('userEmail').textContent = user.email;
+      setupCloudSync(user);
+    } else {
+      state.user = null;
+      if (unsubscribeUserDoc) { unsubscribeUserDoc(); unsubscribeUserDoc = null; }
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('userProfile').style.display = 'none';
+      // Load từ localStorage khi chưa đăng nhập (chế độ offline)
+      loadLocalOnly();
+      window.render();
+    }
+  });
+
+  function loadLocalOnly() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        state.folders = d.folders || [];
+        state.notes = d.notes || [];
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  function saveLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ folders: state.folders, notes: state.notes }));
+  }
+
+  function saveData() {
+    saveLocal();
+    // Chỉ lưu lên cloud nếu KHÔNG phải đang sync từ cloud về (tránh vòng lặp)
+    if (!isSyncingFromCloud && state.user) {
+      saveToCloud();
+    }
   }
 
   function loadSidebarWidth() {
@@ -425,50 +521,6 @@
     }
   }
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      state.user = user;
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('userProfile').style.display = 'block';
-      document.getElementById('userAvatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'U')}&background=ff6b35&color=fff`;
-      document.getElementById('userName').textContent = user.displayName || 'Người dùng';
-      document.getElementById('userEmail').textContent = user.email;
-      loadData();
-      window.render();
-    } else {
-      state.user = null;
-      document.getElementById('loginOverlay').style.display = 'flex';
-      document.getElementById('userProfile').style.display = 'none';
-      loadData();
-      window.render();
-    }
-  });
-
-  function loadData() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
-        state.folders = d.folders || [];
-        state.notes = d.notes || [];
-      }
-      if (state.folders.length === 0) {
-        // Tạo dữ liệu mẫu với cấu trúc 2 cấp
-        const maId = uid();
-        const ch1Id = uid();
-        const ch2Id = uid();
-        state.folders = [
-          { id: maId, name: 'MAE101 - Toán cao cấp', parentId: null },
-          { id: ch1Id, name: 'Chương 1 - Giới hạn', parentId: maId },
-          { id: ch2Id, name: 'Chương 2 - Đạo hàm', parentId: maId },
-          { id: uid(), name: 'Thí nghiệm', parentId: null }
-        ];
-        saveData();
-      }
-    } catch (e) { console.error(e); }
-  }
-
-  // Lấy tất cả folderId con của một folder cha (đệ quy)
   function getChildFolderIds(parentId) {
     const children = state.folders.filter(f => f.parentId === parentId).map(f => f.id);
     const all = [...children];
@@ -520,13 +572,12 @@
 
   window.openFolderModal = () => {
     document.getElementById('fName').value = '';
-    // Cập nhật dropdown parent: chỉ hiển thị folder cấp 1 (parentId === null)
     const parentSelect = document.getElementById('fParent');
     parentSelect.innerHTML = '<option value="">📁 Thư mục gốc (cấp 1)</option>';
     state.folders.filter(f => f.parentId === null).forEach(f => {
       const opt = document.createElement('option');
       opt.value = f.id;
-      opt.textContent = '📂 ' + f.name;
+      opt.textContent = ' ' + f.name;
       parentSelect.appendChild(opt);
     });
     window.openModal('folderModal');
@@ -537,8 +588,6 @@
     const name = document.getElementById('fName').value.trim();
     const parentId = document.getElementById('fParent').value || null;
     if (!name) { toast('Nhập tên thư mục', 'error'); return; }
-    
-    // Giới hạn 2 cấp: nếu parent đã có parent thì không cho tạo thêm
     if (parentId) {
       const parentFolder = state.folders.find(f => f.id === parentId);
       if (parentFolder && parentFolder.parentId !== null) {
@@ -546,7 +595,6 @@
         return;
       }
     }
-    
     state.folders.push({ id: uid(), name, parentId });
     saveData();
     window.render();
@@ -559,13 +607,10 @@
     const childIds = getChildFolderIds(id);
     const allRelatedIds = [id, ...childIds];
     const noteCount = state.notes.filter(n => allRelatedIds.includes(n.folderId)).length;
-    
     const msg = isParent 
       ? `Xóa thư mục này và TẤT CẢ thư mục con? (${noteCount} ghi chép sẽ bị xóa theo)`
       : `Xóa thư mục này? (${noteCount} ghi chép sẽ bị xóa theo)`;
-    
     if (!confirm(msg)) return;
-    
     state.folders = state.folders.filter(f => !allRelatedIds.includes(f.id));
     state.notes = state.notes.filter(n => !allRelatedIds.includes(n.folderId));
     if (allRelatedIds.includes(state.activeFolder)) state.activeFolder = 'all';
@@ -631,34 +676,23 @@
 
   function renderFolders() {
     const list = document.getElementById('folderList');
-    
-    // Đếm số notes trong folder (bao gồm cả folder con)
     function countNotesInFolder(folderId) {
       const allIds = [folderId, ...getChildFolderIds(folderId)];
       return state.notes.filter(n => allIds.includes(n.folderId)).length;
     }
-    
-    // Đếm số notes trực tiếp trong folder (không tính con)
     function countDirectNotes(folderId) {
       return state.notes.filter(n => n.folderId === folderId).length;
     }
-
     let html = `<div class="folder-item ${state.activeFolder === 'all' ? 'active' : ''}" onclick="window.selectFolder('all')">
       <span class="folder-icon">📚</span><span>Tất cả</span><span class="count">${state.notes.length}</span></div>`;
-    
-    // Lấy folder cấp 1 (parentId === null)
     const parentFolders = state.folders.filter(f => f.parentId === null);
-    
     parentFolders.forEach(parent => {
       const childFolders = state.folders.filter(f => f.parentId === parent.id);
       const totalNotes = countNotesInFolder(parent.id);
       const isActive = state.activeFolder === parent.id;
-      
       html += `<div class="folder-item folder-parent ${isActive ? 'active' : ''}" onclick="window.selectFolder('${parent.id}')">
         <span class="folder-icon">📁</span><span>${escapeHtml(parent.name)}</span><span class="count">${totalNotes}</span>
         <span class="del" onclick="event.stopPropagation();window.deleteFolder('${parent.id}')" title="Xóa">✕</span></div>`;
-      
-      // Hiển thị folder con
       childFolders.forEach(child => {
         const directNotes = countDirectNotes(child.id);
         const isChildActive = state.activeFolder === child.id;
@@ -667,12 +701,10 @@
           <span class="del" onclick="event.stopPropagation();window.deleteFolder('${child.id}')" title="Xóa">✕</span></div>`;
       });
     });
-
     list.innerHTML = html;
   }
 
   window.renderListAndTags = () => {
-    // Render Tags
     const allTags = new Set();
     state.notes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
     const tagContainer = document.getElementById('tagFilter');
@@ -685,22 +717,16 @@
       });
       tagContainer.innerHTML = html;
     }
-
-    // Render Note List
     const list = document.getElementById('noteList');
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     let notes = state.notes.slice();
-    
-    // Filter by folder (bao gồm cả folder con nếu đang chọn folder cha)
     if (state.activeFolder !== 'all') {
       const allFolderIds = [state.activeFolder, ...getChildFolderIds(state.activeFolder)];
       notes = notes.filter(n => allFolderIds.includes(n.folderId));
     }
-    // Filter by tag
     if (state.activeTag) {
       notes = notes.filter(n => (n.tags || []).includes(state.activeTag));
     }
-    // Filter by search
     if (q) {
       notes = notes.filter(n => 
         n.title.toLowerCase().includes(q) || 
@@ -708,17 +734,13 @@
         (n.tags || []).some(t => t.toLowerCase().includes(q))
       );
     }
-    
     notes.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-
     if (notes.length === 0) {
       list.innerHTML = `<div class="empty" style="padding:20px;"><div class="big" style="font-size:32px">📭</div><div>${q || state.activeTag ? 'Không tìm thấy' : 'Chưa có ghi chép'}</div></div>`;
       return;
     }
-
     list.innerHTML = notes.map(n => {
       const folder = state.folders.find(f => f.id === n.folderId);
-      // Nếu folder là con, hiển thị cả tên cha
       let folderPath = '';
       if (folder) {
         if (folder.parentId) {
@@ -743,13 +765,10 @@
   window.renderEditor = () => {
     const container = document.getElementById('editorContainer');
     const note = state.notes.find(n => n.id === state.selectedNoteId);
-    
     if (!note) {
       container.innerHTML = `<div class="empty"><div class="big">📝</div><div>Chọn hoặc tạo ghi chép mới để bắt đầu</div></div>`;
       return;
     }
-
-    // Tạo options cho dropdown folder (có indent cho folder con)
     const parentFolders = state.folders.filter(f => f.parentId === null);
     let folderOptions = '<option value="">-- Không chọn --</option>';
     parentFolders.forEach(p => {
@@ -759,7 +778,6 @@
         folderOptions += `<option value="${c.id}" ${c.id === note.folderId ? 'selected' : ''}>  📂 ${escapeHtml(c.name)}</option>`;
       });
     });
-
     container.innerHTML = `
       <div class="editor-card">
         <div class="form-group">
@@ -807,7 +825,6 @@
 
   window.openModal = (id) => { document.getElementById(id).classList.add('show'); }
   window.closeModal = (id) => { document.getElementById(id).classList.remove('show'); }
-
   document.querySelectorAll('.modal-backdrop').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) window.closeModal(m.id); });
   });
@@ -865,7 +882,6 @@
   let isResizing = false;
   let startX = 0;
   let startWidth = 0;
-
   resizeHandle.addEventListener('mousedown', (e) => {
     isResizing = true;
     startX = e.clientX;
@@ -875,32 +891,26 @@
     document.body.style.userSelect = 'none';
     e.preventDefault();
   });
-
   document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
     const diff = e.clientX - startX;
     let newWidth = startWidth + diff;
-    // Giới hạn kích thước
     newWidth = Math.max(200, Math.min(600, newWidth));
     document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
   });
-
   document.addEventListener('mouseup', () => {
     if (isResizing) {
       isResizing = false;
       resizeHandle.classList.remove('active');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      // Lưu vào localStorage
       const currentWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
       localStorage.setItem(SIDEBAR_KEY, currentWidth);
     }
   });
 
-  // Khởi chạy
   loadSidebarWidth();
-  loadData();
-  console.log(" [App] Digital Lab Notebook v3 đã sẵn sàng");
+  console.log(" [App] Digital Lab Notebook v3 với Firestore đã sẵn sàng");
 </script>
 </body>
 </html>
