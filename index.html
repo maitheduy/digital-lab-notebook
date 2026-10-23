@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Digital Lab Notebook - Sổ tay Nghiên cứu</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --bg-2:#111827; --card:#161c2c; --card-2:#1f2740;
+    --border:#2a3350; --text:#e6ebf5; --muted:#8892b0;
+    --accent:#ff6b35; --accent-2:#ffb347; --cyan:#00d4ff;
+    --danger:#ff4757; --success:#2ed573;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(600px circle at 10% 10%, rgba(255,107,53,.08), transparent 50%),
+               radial-gradient(500px circle at 90% 80%, rgba(0,212,255,.06), transparent 50%);
+  }
+  .app{display:grid;grid-template-columns:280px 1fr;gap:0;min-height:100vh;position:relative;z-index:1}
+  .sidebar{
+    background:linear-gradient(180deg,var(--bg-2),var(--bg));
+    border-right:1px solid var(--border); padding:20px 16px;
+    display:flex;flex-direction:column;gap:16px;
+    position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;letter-spacing:.5px;padding:8px 4px}
+  .logo .icon{
+    width:36px;height:36px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;color:#0a0e1a;font-weight:900;
+    box-shadow:0 6px 20px rgba(255,107,53,.35);
+  }
+  .logo span b{color:var(--accent)}
+  .section-title{
+    font-size:11px;text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--muted);padding:8px 6px 4px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .section-title button{
+    background:transparent;border:0;color:var(--accent);cursor:pointer;font-size:16px;font-weight:700;line-height:1;
+  }
+  .section-title button:hover{color:var(--accent-2)}
+  .note-list{display:flex;flex-direction:column;gap:8px}
+  .note-item{
+    padding:12px;border-radius:8px;cursor:pointer;
+    background:var(--card);border:1px solid var(--border);
+    transition:all .2s;position:relative;
+  }
+  .note-item:hover{border-color:var(--accent);transform:translateX(4px)}
+  .note-item.active{
+    background:linear-gradient(90deg,rgba(255,107,53,.18),transparent);
+    border-left:3px solid var(--accent);
+  }
+  .note-item .title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .note-item .date{font-size:11px;color:var(--muted)}
+  .note-item .del{
+    position:absolute;top:8px;right:8px;
+    background:var(--danger);color:#fff;
+    border:none;border-radius:4px;padding:2px 6px;
+    cursor:pointer;font-size:10px;opacity:0;transition:opacity .2s;
+  }
+  .note-item:hover .del{opacity:1}
+  .io-buttons{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+  .btn{
+    padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:600;font-size:13px;
+    display:flex;align-items:center;gap:8px;justify-content:center;transition:all .15s;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0a0e1a}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,107,53,.3)}
+  .btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .main{padding:24px 32px;overflow-y:auto}
+  .topbar{display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
+  .search{flex:1;min-width:220px;position:relative}
+  .search input{
+    width:100%;padding:12px 14px 12px 40px;background:var(--card);border:1px solid var(--border);
+    color:var(--text);border-radius:10px;font-size:14px;outline:none;transition:border-color .15s;
+  }
+  .search input:focus{border-color:var(--accent)}
+  .search::before{content:"";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.7}
+  .editor-card{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:24px;display:flex;flex-direction:column;gap:16px;
+  }
+  .form-group{display:flex;flex-direction:column;gap:6px}
+  .form-group label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+  .form-group input, .form-group textarea{
+    padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;
+  }
+  .form-group input:focus, .form-group textarea:focus{border-color:var(--accent)}
+  .form-group textarea{min-height:300px;resize:vertical;line-height:1.6}
+  .attachments{display:flex;flex-direction:column;gap:8px}
+  .attachment-item{
+    display:flex;align-items:center;gap:10px;padding:8px 12px;
+    background:var(--bg-2);border:1px solid var(--border);border-radius:6px;
+  }
+  .attachment-item a{color:var(--cyan);text-decoration:underline;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .attachment-item .remove{
+    background:var(--danger);color:#fff;border:none;border-radius:4px;
+    padding:2px 8px;cursor:pointer;font-size:11px;
+  }
+  .add-attachment{
+    display:flex;gap:8px;margin-top:4px;
+  }
+  .add-attachment input{
+    flex:1;padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);
+    border-radius:6px;color:var(--text);font-size:13px;
+  }
+  .add-attachment button{
+    padding:8px 16px;background:var(--card-2);border:1px solid var(--border);
+    border-radius:6px;color:var(--text);cursor:pointer;font-size:13px;
+  }
+  .add-attachment button:hover{border-color:var(--accent);color:var(--accent)}
+  .timestamp{
+    font-size:11px;color:var(--muted);padding:8px 12px;
+    background:rgba(0,212,255,.1);border-radius:6px;
+    border-left:2px solid var(--cyan);
+  }
+  .actions{display:flex;gap:10px;justify-content:flex-end}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+  .empty .big{font-size:48px;margin-bottom:12px;opacity:.3}
+  .login-overlay{
+    position:fixed;inset:0;background:var(--bg);z-index:1000;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .login-box{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:40px;width:100%;max-width:420px;text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:fadeIn 0.3s ease-out;
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .toast{
+    position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--success);
+    color:var(--success);padding:12px 18px;border-radius:10px;font-weight:600;font-size:13px;z-index:200;
+    transform:translateY(100px);opacity:0;transition:all .3s;box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.error{border-color:var(--danger);color:var(--danger)}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+  @media (max-width:768px){
+    .app{grid-template-columns:1fr}
+    .sidebar{position:relative;height:auto}
+    .main{padding:16px}
+    .login-box{padding:24px;margin:16px}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-box">
+    <div class="logo" style="justify-content:center;margin-bottom:24px;">
+      <div class="icon">🔬</div>
+      <span>Digital<b>Lab</b>Notebook</span>
+    </div>
+    <h2 style="margin-bottom:12px;">Sổ tay Nghiên cứu</h2>
+    <p style="color:var(--muted);margin-bottom:32px;text-align:center;line-height:1.6;">
+      Ghi chép nhật ký nghiên cứu hàng ngày, đính kèm tài liệu và hình ảnh. Đồng bộ đám mây an toàn.
+    </p>
+    <button id="loginBtn" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:8px;"><path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81Z"/></svg>
+      <span id="loginBtnText">Đăng nhập bằng Google</span>
+    </button>
+    <p id="loginStatus" style="margin-top:16px;font-size:11px;color:var(--danger);display:none;"></p>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="icon">🔬</div>
+      <span>Digital<b>Lab</b>Notebook</span>
+    </div>
+    <div>
+      <div class="section-title">
+        <span>Ghi chép</span>
+        <button onclick="window.createNewNote()" title="Tạo ghi chép mới">+</button>
+      </div>
+      <div class="note-list" id="noteList"></div>
+    </div>
+    <div class="io-buttons">
+      <button class="btn btn-primary" onclick="window.createNewNote()">＋ Ghi chép mới</button>
+      <button class="btn btn-ghost" onclick="window.exportData()"> Xuất JSON</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆ Nhập JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="window.importData(event)"/>
+    </div>
+    <div id="userProfile" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+      <div id="syncStatus" style="font-size:11px;color:var(--success);display:flex;align-items:center;gap:4px;margin-bottom:10px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;"></span>
+        Đã đồng bộ đám mây
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <img id="userAvatar" src="" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;"/>
+        <div style="flex:1;overflow:hidden;">
+          <div id="userName" style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div id="userEmail" style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+      </div>
+      <button class="btn btn-ghost" onclick="window.logout()" style="width:100%;justify-content:center;font-size:12px;border-color:var(--danger);color:var(--danger);">
+         Đăng xuất
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="search">
+        <input type="text" id="searchInput" placeholder="Tìm theo tiêu đề, nội dung, ngày tháng..." oninput="window.render()"/>
+      </div>
+    </div>
+    <div id="editorContainer"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxoYI-uaALS2hycvMh5Ma9Bnl0HZ-512s",
+    authDomain: "digital-lab-notebook-bbdc7.firebaseapp.com",
+    projectId: "digital-lab-notebook-bbdc7",
+    storageBucket: "digital-lab-notebook-bbdc7.firebasestorage.app",
+    messagingSenderId: "1068554618449",
+    appId: "1:1068554618449:web:7881c93ccb2d49dbf75a70"
+  };
+
+  let auth, db, provider;
+  let firebaseInitialized = false;
+  let isProcessingRedirect = false;
+  
+  try {
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    provider = new GoogleAuthProvider();
+    firebaseInitialized = true;
+    console.log("✅ Firebase khởi tạo thành công!");
+  } catch (e) {
+    console.error("❌ Lỗi khởi tạo Firebase:", e);
+    showLoginError('Lỗi Firebase: ' + e.message);
+  }
+
+  const STORAGE_KEY = 'digitalLabNotebook_v1';
+  let state = { notes: [], selectedNoteId: null, user: null };
+  let unsubscribeFirestore = null;
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  
+  function formatTimestamp(timestamp) {
+    if (!timestamp) return 'Chưa lưu';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleString('vi-VN', { 
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function toast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type === 'error' ? ' error' : '');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('loginStatus');
+    el.style.display = 'block';
+    el.textContent = msg;
+  }
+
+  function setLoading(loading) {
+    const btn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('loginBtnText');
+    if (loading) {
+      btn.disabled = true;
+      btnText.innerHTML = '<span class="spinner"></span>Đang xử lý...';
+    } else {
+      btn.disabled = false;
+      btnText.textContent = 'Đăng nhập bằng Google';
+    }
+  }
+
+  async function handleRedirectOnLoad() {
+    if (!firebaseInitialized) return;
+    try {
+      console.log("🔄 [Redirect] Đang kiểm tra kết quả redirect...");
+      const result = await getRedirectResult(auth);
+      if (result) {
+        console.log("✅ [Redirect] Đăng nhập thành công:", result.user.email);
+        toast('Đăng nhập thành công!');
+      } else {
+        console.log("ℹ️ [Redirect] Không có kết quả redirect");
+      }
+    } catch (error) {
+      console.error("❌ [Redirect] Lỗi:", error);
+      showLoginError('Lỗi đăng nhập: ' + error.message);
+    } finally {
+      isProcessingRedirect = false;
+    }
+  }
+
+  window.loginWithGoogle = async () => {
+    if (!firebaseInitialized) {
+      toast('Firebase chưa khởi tạo. Vui lòng F5 lại trang.', 'error');
+      return;
+    }
+    if (isProcessingRedirect) {
+      toast('Đang xử lý đăng nhập, vui lòng đợi...', 'error');
+      return;
+    }
+
+    setLoading(true);
+    showLoginError('');
+
+    try {
+      console.log("🔐 [Login] Thử đăng nhập bằng Popup...");
+      const result = await signInWithPopup(auth, provider);
+      console.log("✅ [Login] Popup thành công:", result.user.email);
+      toast('Đăng nhập thành công!');
+    } catch (popupError) {
+      console.warn("⚠️ [Login] Popup thất bại:", popupError.code);
+      if (popupError.code === 'auth/popup-blocked' || 
+          popupError.code === 'auth/cancelled-popup-request' ||
+          popupError.code === 'auth/popup-closed-by-user') {
+        console.log("🔄 [Login] Chuyển sang phương thức Redirect...");
+        toast('Chuyển sang chế độ redirect...', 'success');
+        isProcessingRedirect = true;
+        await signInWithRedirect(auth, provider);
+      } else {
+        console.error("❌ [Login] Lỗi:", popupError);
+        let errorMsg = popupError.message;
+        if (popupError.code === 'auth/unauthorized-domain') {
+          errorMsg = 'Tên miền chưa được ủy quyền. Thêm domain vào Firebase Console > Authentication > Settings > Authorized domains';
+        }
+        showLoginError('Lỗi: ' + errorMsg);
+        toast('Lỗi đăng nhập', 'error');
+      }
+    } finally {
+      if (!isProcessingRedirect) setLoading(false);
+    }
+  };
+
+  document.getElementById('loginBtn').addEventListener('click', window.loginWithGoogle);
+
+  window.logout = () => {
+    if(confirm("Bạn có chắc muốn đăng xuất?")) {
+      signOut(auth).then(() => {
+        toast("Đã đăng xuất");
+        console.log(" [Logout] Đã đăng xuất");
+      }).catch(err => {
+        console.error("❌ [Logout] Lỗi:", err);
+        toast("Lỗi: " + err.message, 'error');
+      });
+    }
+  };
+
+  function saveToFirestore() {
+    if (!state.user) return;
+    const userRef = doc(db, 'users', state.user.uid);
+    setDoc(userRef, { notes: state.notes, lastUpdated: new Date() }, { merge: true })
+      .catch(err => { console.error(" [Save] Lỗi:", err); toast("Lỗi lưu đám mây!", 'error'); });
+  }
+
+  function setupFirestoreSync(user) {
+    if (unsubscribeFirestore) unsubscribeFirestore();
+    const userRef = doc(db, 'users', user.uid);
+    console.log(" [Sync] Bắt đầu đồng bộ cho user:", user.email);
+    
+    unsubscribeFirestore = onSnapshot(userRef, (docSnap) => {
+      const statusEl = document.getElementById('syncStatus');
+      statusEl.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;"></span> Đã đồng bộ`;
+      statusEl.style.color = 'var(--success)';
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        state.notes = data.notes || [];
+        console.log("💾 [Sync] Đã tải:", state.notes.length, "ghi chép");
+      } else {
+        console.log("📝 [Sync] Chưa có dữ liệu");
+        state.notes = [];
+      }
+      window.render();
+    }, (error) => {
+      console.error("❌ [Sync] Lỗi:", error);
+      toast("Lỗi đồng bộ: " + error.message, 'error');
+    });
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    console.log(" [Auth] Trạng thái thay đổi:", user ? user.email : 'null');
+    if (user) {
+      state.user = user;
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('userProfile').style.display = 'block';
+      document.getElementById('userAvatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'U')}&background=ff6b35&color=fff`;
+      document.getElementById('userName').textContent = user.displayName || 'Người dùng';
+      document.getElementById('userEmail').textContent = user.email;
+      setupFirestoreSync(user);
+    } else {
+      state.user = null;
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('userProfile').style.display = 'none';
+      if (unsubscribeFirestore) { unsubscribeFirestore(); unsubscribeFirestore = null; }
+      loadLocal();
+      window.render();
+    }
+  });
+
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        state.notes = d.notes || [];
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  function saveLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ notes: state.notes }));
+  }
+
+  function save() {
+    saveLocal();
+    if (state.user) saveToFirestore();
+  }
+
+  window.createNewNote = () => {
+    const newNote = {
+      id: uid(),
+      title: 'Ghi chép mới',
+      content: '',
+      attachments: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    state.notes.unshift(newNote);
+    state.selectedNoteId = newNote.id;
+    save();
+    window.render();
+    setTimeout(() => {
+      document.getElementById('noteTitle').focus();
+    }, 100);
+    toast('Đã tạo ghi chép mới');
+  };
+
+  window.selectNote = (id) => {
+    state.selectedNoteId = id;
+    window.render();
+  };
+
+  window.deleteNote = (id) => {
+    if (!confirm('Xóa ghi chép này?')) return;
+    state.notes = state.notes.filter(n => n.id !== id);
+    if (state.selectedNoteId === id) state.selectedNoteId = null;
+    save();
+    window.render();
+    toast('Đã xóa ghi chép');
+  };
+
+  window.addAttachment = () => {
+    const input = document.getElementById('attachmentUrl');
+    const url = input.value.trim();
+    if (!url) {
+      toast('Nhập URL đính kèm', 'error');
+      return;
+    }
+    const note = state.notes.find(n => n.id === state.selectedNoteId);
+    if (!note) return;
+    note.attachments.push({ url, addedAt: new Date() });
+    note.updatedAt = new Date();
+    input.value = '';
+    save();
+    window.render();
+    toast('Đã thêm đính kèm');
+  };
+
+  window.removeAttachment = (index) => {
+    const note = state.notes.find(n => n.id === state.selectedNoteId);
+    if (!note) return;
+    note.attachments.splice(index, 1);
+    note.updatedAt = new Date();
+    save();
+    window.render();
+  };
+
+  window.updateNote = () => {
+    const note = state.notes.find(n => n.id === state.selectedNoteId);
+    if (!note) return;
+    note.title = document.getElementById('noteTitle').value;
+    note.content = document.getElementById('noteContent').value;
+    note.updatedAt = new Date();
+    save();
+    window.renderNoteList();
+  };
+
+  window.render = () => {
+    renderNoteList();
+    renderEditor();
+  };
+
+  window.renderNoteList = () => {
+    const list = document.getElementById('noteList');
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    let notes = state.notes.slice();
+    if (q) {
+      notes = notes.filter(n => 
+        n.title.toLowerCase().includes(q) || 
+        n.content.toLowerCase().includes(q) ||
+        formatTimestamp(n.createdAt).toLowerCase().includes(q)
+      );
+    }
+    notes.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+
+    if (notes.length === 0) {
+      list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+        ${q ? 'Không tìm thấy' : 'Chưa có ghi chép'}
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = notes.map(n => `
+      <div class="note-item ${n.id === state.selectedNoteId ? 'active' : ''}" onclick="window.selectNote('${n.id}')">
+        <div class="title">${escapeHtml(n.title || 'Không tiêu đề')}</div>
+        <div class="date">${formatTimestamp(n.updatedAt || n.createdAt)}</div>
+        <span class="del" onclick="event.stopPropagation();window.deleteNote('${n.id}')" title="Xóa">✕</span>
+      </div>
+    `).join('');
+  };
+
+  window.renderEditor = () => {
+    const container = document.getElementById('editorContainer');
+    const note = state.notes.find(n => n.id === state.selectedNoteId);
+    
+    if (!note) {
+      container.innerHTML = `<div class="empty"><div class="big">📝</div><div>Chọn hoặc tạo ghi chép mới để bắt đầu</div></div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="editor-card">
+        <div class="form-group">
+          <label>Tiêu đề</label>
+          <input type="text" id="noteTitle" value="${escapeHtml(note.title)}" oninput="window.updateNote()" placeholder="Nhập tiêu đề ghi chép..."/>
+        </div>
+        <div class="form-group">
+          <label>Nội dung</label>
+          <textarea id="noteContent" oninput="window.updateNote()" placeholder="Ghi chép nội dung nghiên cứu của bạn...">${escapeHtml(note.content)}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Đính kèm (URL)</label>
+          <div class="add-attachment">
+            <input type="url" id="attachmentUrl" placeholder="Dán link ảnh, PDF, video YouTube..."/>
+            <button onclick="window.addAttachment()">Thêm</button>
+          </div>
+          <div class="attachments" style="margin-top:12px;">
+            ${note.attachments.map((att, idx) => `
+              <div class="attachment-item">
+                <a href="${escapeHtml(att.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(att.url)}</a>
+                <button class="remove" onclick="window.removeAttachment(${idx})">Xóa</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="timestamp">
+          <strong>Tạo:</strong> ${formatTimestamp(note.createdAt)} | 
+          <strong>Cập nhật:</strong> ${formatTimestamp(note.updatedAt)}
+        </div>
+      </div>
+    `;
+  };
+
+  window.exportData = () => {
+    const data = { 
+      version: 1, 
+      exportedAt: new Date().toISOString(), 
+      notes: state.notes,
+      user: state.user ? { email: state.user.email, name: state.user.displayName } : null
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; 
+    a.download = `lab-notebook-${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); 
+    URL.revokeObjectURL(url);
+    toast('Đã xuất file JSON');
+  };
+
+  window.importData = (e) => {
+    const file = e.target.files[0]; 
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (!d.notes || !Array.isArray(d.notes)) throw new Error('Format không hợp lệ');
+        if (!confirm(`Nhập ${d.notes.length} ghi chép?\n(Dữ liệu hiện tại sẽ bị ghi đè)`)) return;
+        state.notes = d.notes;
+        state.selectedNoteId = null;
+        save();
+        window.render();
+        toast('Đã nhập dữ liệu thành công');
+      } catch (err) { 
+        toast('Lỗi: ' + err.message, 'error'); 
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('attachmentUrl')?.blur();
+    }
+  });
+
+  handleRedirectOnLoad();
+  console.log(" [App] Digital Lab Notebook đã sẵn sàng");
+</script>
+</body>
+</html>
