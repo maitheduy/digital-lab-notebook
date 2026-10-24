@@ -280,7 +280,7 @@
     <div class="form-group">
       <label>Loại thư mục</label>
       <select id="fParent">
-        <option value="">📁 Thư mục gốc (cấp 1)</option>
+        <option value=""> Thư mục gốc (cấp 1)</option>
       </select>
       <div class="hint" style="font-size:11px;color:var(--muted);margin-top:4px;">Chọn "Thư mục gốc" để tạo môn học, hoặc chọn môn để tạo chương con.</div>
     </div>
@@ -321,7 +321,7 @@
     console.error("❌ Lỗi khởi tạo Firebase:", e);
   }
 
-  const STORAGE_KEY = 'digitalLabNotebook_v4';
+  const STORAGE_KEY = 'digitalLabNotebook_v5';
   const SIDEBAR_KEY = 'sidebarWidth_v1';
   let state = { 
     folders: [], 
@@ -332,12 +332,11 @@
     user: null 
   };
   
-  // ===== CƠ CHẾ CHỐNG LỖI MẤT FOCUS =====
   let isSyncingFromCloud = false;
   let unsubscribeUserDoc = null;
-  let saveDebounceTimer = null; // Debounce timer cho save
-  let isUserTyping = false; // Flag: user đang gõ
-  let lastCloudVersion = null; // Version của dữ liệu cloud để tránh vòng lặp
+  let saveDebounceTimer = null;
+  let isEditingNote = false; // Flag: đang edit note
+  let lastCloudVersion = null;
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -382,24 +381,11 @@
     if (textEl) textEl.textContent = text;
   }
 
-  // ===== TRACK FOCUS STATE =====
-  // Khi user đang focus vào input/textarea trong editor, không render lại editor
-  document.addEventListener('focusin', (e) => {
-    if (e.target.closest('.editor-card') || e.target.id === 'searchInput') {
-      isUserTyping = true;
-    }
-  });
-  document.addEventListener('focusout', (e) => {
-    // Delay để tránh race condition với click events
-    setTimeout(() => {
-      const active = document.activeElement;
-      if (!active || !active.closest('.editor-card')) {
-        if (active?.id !== 'searchInput') {
-          isUserTyping = false;
-        }
-      }
-    }, 100);
-  });
+  // Track khi user đang edit note
+  function setEditingNote(editing) {
+    isEditingNote = editing;
+    console.log("📝 isEditingNote:", editing);
+  }
 
   window.loginWithGoogle = async () => {
     if (!firebaseInitialized) { toast('Firebase chưa khởi tạo.', 'error'); return; }
@@ -428,7 +414,6 @@
     }
   };
 
-  // ===== FIRESTORE SYNC VỚI DEBOUNCE =====
   function saveToCloud() {
     if (!state.user || !db) return;
     updateSyncStatus('syncing', 'Đang lưu lên đám mây...');
@@ -450,12 +435,11 @@
       });
   }
 
-  // DEBOUNCE: Chờ 1.5 giây sau khi user ngừng gõ mới save lên cloud
   function debouncedSaveToCloud() {
     if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
     saveDebounceTimer = setTimeout(() => {
       saveToCloud();
-    }, 1500); // 1.5 giây
+    }, 1500);
   }
 
   function setupCloudSync(user) {
@@ -470,43 +454,28 @@
         const data = docSnap.data();
         const cloudVersion = data.version || 0;
         
-        // Tránh vòng lặp: nếu version cloud = version local, bỏ qua
         if (cloudVersion === lastCloudVersion) {
           isSyncingFromCloud = false;
           return;
         }
         lastCloudVersion = cloudVersion;
         
-        // ===== SMART MERGE =====
-        // Nếu user đang gõ (focus trong editor), KHÔNG render lại editor
-        // Chỉ cập nhật dữ liệu ngầm và render list/tags
-        const previousSelectedId = state.selectedNoteId;
-        const previousActiveFolder = state.activeFolder;
-        const previousActiveTag = state.activeTag;
-        
         state.folders = data.folders || [];
         state.notes = data.notes || [];
         
-        // Khôi phục state UI
-        state.selectedNoteId = previousSelectedId;
-        state.activeFolder = previousActiveFolder;
-        state.activeTag = previousActiveTag;
-        
-        console.log("📥 Đã tải từ Firestore:", state.notes.length, "ghi chép");
+        console.log(" Đã tải từ Firestore:", state.notes.length, "ghi chép");
         updateSyncStatus('synced', 'Đã đồng bộ đám mây');
         
-        // Nếu user đang gõ → chỉ render list & tags, KHÔNG render editor
-        if (isUserTyping) {
-          console.log("⌨️ User đang gõ - chỉ render list/tags, giữ nguyên editor");
+        // Nếu đang edit note → KHÔNG render editor, chỉ render list
+        if (isEditingNote) {
+          console.log("⌨️ Đang edit - chỉ render list");
           renderFolders();
           renderListAndTags();
         } else {
-          // User không gõ → render toàn bộ
           window.render();
         }
       } else {
-        // User mới - tạo dữ liệu mẫu
-        console.log("🆕 User mới, tạo dữ liệu mẫu");
+        console.log(" User mới, tạo dữ liệu mẫu");
         const maId = uid();
         const ch1Id = uid();
         const ch2Id = uid();
@@ -567,10 +536,9 @@
 
   function saveData() {
     saveLocal();
-    // Chỉ lưu lên cloud nếu KHÔNG phải đang sync từ cloud về
     if (!isSyncingFromCloud && state.user) {
-      debouncedSaveToCloud(); // DEBOUNCE: chờ 1.5s
-      updateSyncStatus('typing', 'Đang gõ... (tự động lưu)');
+      debouncedSaveToCloud();
+      updateSyncStatus('typing', 'Đang gõ... (tự động lưu sau 1.5s)');
     }
   }
 
@@ -621,13 +589,17 @@
 
   window.selectNote = (id) => {
     state.selectedNoteId = id;
+    setEditingNote(false); // Reset flag khi chọn note mới
     window.render();
   };
 
   window.deleteNote = (id) => {
     if (!confirm('Xóa ghi chép này?')) return;
     state.notes = state.notes.filter(n => n.id !== id);
-    if (state.selectedNoteId === id) state.selectedNoteId = null;
+    if (state.selectedNoteId === id) {
+      state.selectedNoteId = null;
+      setEditingNote(false);
+    }
     saveData();
     window.render();
     toast('Đã xóa ghi chép');
@@ -677,7 +649,10 @@
     state.folders = state.folders.filter(f => !allRelatedIds.includes(f.id));
     state.notes = state.notes.filter(n => !allRelatedIds.includes(n.folderId));
     if (allRelatedIds.includes(state.activeFolder)) state.activeFolder = 'all';
-    if (allRelatedIds.includes(state.selectedNoteId)) state.selectedNoteId = null;
+    if (allRelatedIds.includes(state.selectedNoteId)) {
+      state.selectedNoteId = null;
+      setEditingNote(false);
+    }
     saveData();
     window.render();
   };
@@ -686,17 +661,18 @@
     state.activeFolder = id; 
     state.activeTag = null; 
     state.selectedNoteId = null;
+    setEditingNote(false);
     window.render(); 
   };
 
   window.filterTag = (t) => { 
     state.activeTag = t; 
     state.selectedNoteId = null;
+    setEditingNote(false);
     window.render(); 
   };
 
   window.handleSearchInput = () => {
-    // Chỉ render list & tags, KHÔNG render editor (giữ focus search)
     renderFolders();
     renderListAndTags();
   };
@@ -711,7 +687,6 @@
     note.updatedAt = new Date().toISOString();
     input.value = '';
     saveData();
-    // Không render editor, chỉ render list
     renderFolders();
     renderListAndTags();
     toast('Đã thêm đính kèm');
@@ -727,12 +702,14 @@
     renderListAndTags();
   };
 
-  // ===== UPDATE NOTE VỚI DEBOUNCE =====
+  // ===== UPDATE NOTE - ĐÃ SỬA =====
   window.updateNote = () => {
     const note = state.notes.find(n => n.id === state.selectedNoteId);
     if (!note) return;
     
-    // Cập nhật state ngay (không chờ debounce)
+    // Đánh dấu đang edit
+    setEditingNote(true);
+    
     note.title = document.getElementById('noteTitle').value;
     note.content = document.getElementById('noteContent').value;
     note.folderId = document.getElementById('noteFolder').value;
@@ -740,18 +717,27 @@
     note.tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
     note.updatedAt = new Date().toISOString();
     
-    // Lưu local ngay
     saveLocal();
     
-    // Debounce save lên cloud (chờ 1.5s sau khi ngừng gõ)
     if (state.user && !isSyncingFromCloud) {
       debouncedSaveToCloud();
       updateSyncStatus('typing', 'Đang gõ... (tự động lưu sau 1.5s)');
     }
     
-    // Chỉ render list & tags, KHÔNG render editor (giữ focus)
+    // Chỉ render list & tags, KHÔNG render editor
     renderFolders();
     renderListAndTags();
+  };
+
+  // Khi blur khỏi editor, reset flag
+  window.editorBlur = () => {
+    setTimeout(() => {
+      const active = document.activeElement;
+      if (!active || !active.closest('.editor-card')) {
+        setEditingNote(false);
+        console.log(" Blur khỏi editor");
+      }
+    }, 200);
   };
 
   window.render = () => {
@@ -783,8 +769,8 @@
         const directNotes = countDirectNotes(child.id);
         const isChildActive = state.activeFolder === child.id;
         html += `<div class="folder-item folder-child ${isChildActive ? 'active' : ''}" onclick="window.selectFolder('${child.id}')">
-          <span class="folder-icon"></span><span>${escapeHtml(child.name)}</span><span class="count">${directNotes}</span>
-          <span class="del" onclick="event.stopPropagation();window.deleteFolder('${child.id}')" title="Xóa">✕</span></div>`;
+          <span class="folder-icon">📂</span><span>${escapeHtml(child.name)}</span><span class="count">${directNotes}</span>
+          <span class="del" onclick="event.stopPropagation();window.deleteFolder('${child.id}')" title="Xóa"></span></div>`;
       });
     });
     list.innerHTML = html;
@@ -852,7 +838,7 @@
     const container = document.getElementById('editorContainer');
     const note = state.notes.find(n => n.id === state.selectedNoteId);
     if (!note) {
-      container.innerHTML = `<div class="empty"><div class="big">📝</div><div>Chọn hoặc tạo ghi chép mới để bắt đầu</div></div>`;
+      container.innerHTML = `<div class="empty"><div class="big"></div><div>Chọn hoặc tạo ghi chép mới để bắt đầu</div></div>`;
       return;
     }
     const parentFolders = state.folders.filter(f => f.parentId === null);
@@ -865,7 +851,7 @@
       });
     });
     container.innerHTML = `
-      <div class="editor-card">
+      <div class="editor-card" onblur="window.editorBlur()">
         <div class="form-group">
           <label>Tiêu đề</label>
           <input type="text" id="noteTitle" value="${escapeHtml(note.title)}" oninput="window.updateNote()" placeholder="Nhập tiêu đề ghi chép..."/>
@@ -922,7 +908,7 @@
 
   window.exportData = () => {
     const data = { 
-      version: 4, 
+      version: 5, 
       exportedAt: new Date().toISOString(), 
       folders: state.folders,
       notes: state.notes,
@@ -952,6 +938,7 @@
         state.selectedNoteId = null;
         state.activeFolder = 'all';
         state.activeTag = null;
+        setEditingNote(false);
         saveData();
         window.render();
         toast('Đã nhập dữ liệu thành công');
@@ -963,7 +950,6 @@
     e.target.value = '';
   };
 
-  // ===== RESIZABLE SIDEBAR =====
   const resizeHandle = document.getElementById('resizeHandle');
   let isResizing = false;
   let startX = 0;
@@ -996,7 +982,7 @@
   });
 
   loadSidebarWidth();
-  console.log(" [App] Digital Lab Notebook v4 với Firestore + Debounce đã sẵn sàng");
+  console.log(" [App] Digital Lab Notebook v5 đã sẵn sàng");
 </script>
 </body>
 </html>
